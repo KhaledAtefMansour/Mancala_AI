@@ -15,8 +15,20 @@ class Mancala():
         self.valid_move = True
 
     def print(self):
-        print('Game_state is : ', self.state )
-        print('Next turn is : ', self.turn)
+        print('                 ',end = '   ')
+        for i in range(12,6,-1):
+            print(self.state[i],end = '         ')
+        print('',end = '\n')
+        print('            ',end = '   ')
+        print(self.state[13],end = '                                                           ')
+        print(self.state[6])
+        print('                 ',end = '   ')
+        for i in range(0,6):
+            print(self.state[i],end = '         ')
+        print('',end = '\n')
+        print('',end = '\n')
+        print('Next turn is : ', 'AI' if self.turn == 'max' else 'human')
+        print('',end = '\n')
 
     def move(self,selected_place):
         num_of_stones = self.state[selected_place]
@@ -54,3 +66,12 @@ class Mancala():
             place_to_add_stone = (place_to_add_stone + 1) % 14
 
         return Mancala(next_state, self.Stealing, self.turn)
+
+if __name__ == '__main__':
+    
+    q = Mancala(turn = 'min')
+    q.print()
+    for i in range(5):
+        l = q.move(i)
+        l.print()
+        q = l
