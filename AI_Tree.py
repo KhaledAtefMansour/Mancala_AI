@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib as plt
 import importlib
-from First_Class import Mancala
+from Mancala import Mancala
 
 class Node:
     def __init__(self, current_state):
