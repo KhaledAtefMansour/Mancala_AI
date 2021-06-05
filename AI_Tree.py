@@ -17,17 +17,16 @@ class Tree:
         return Node(mancala_state)
 
     def createTree(self,root,depth):
-        #print(depth == 0)
+
         if depth == 0:
             return root
         Valid_moves = range(0,6) if root.mancala.turn == 'min' else range(7,13)
+        
         for move in Valid_moves:
-            #print(move is None)
             Next = root.mancala.move(move)
             child_Node = self.createNode(Next.state,Next.turn) 
             root.future_states.append(self.createTree(child_Node,depth - 1))
-            print(root.future_states[-1] is None , move , depth)
-
+        return root
 
     def search(self, node, data):
         """
@@ -58,4 +57,4 @@ if __name__ == "__main__":
     m = Mancala()
     N = T.createNode(m.state,m.turn)
     r = T.createTree(N,2)
-    T.traverseInorder(r)
+    T.traverseInorder(N)
