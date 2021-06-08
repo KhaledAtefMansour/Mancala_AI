@@ -1,4 +1,7 @@
 import save
+import time
+import signal
+
 current_state = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]
 LEVELS = [1, 4, 7, 10]
 
@@ -6,8 +9,9 @@ load = int(input("do you want to load game ? (yes = press 1, no = press 0)  \n")
 stealing = 1
 turn = ""
 level = 1
+interrupt_mode = 0
 if load == 1:
-    current_state, stealing, level = save.load()
+    current_state, stealing, level, interrupt_mode = save.load()
     turn = 'min'
 
 else:
@@ -17,6 +21,9 @@ else:
         "do you want to start ? (yes = enter 'min', no = enter 'max')  \n")
     level = int(
         input("choose level: 1 - 2 - 3 - 4  \n"))-1
+
+    interrupt_mode = int(
+        input("force play method: 0- let the kid take his time\n1-CTRL+C\n2- 30s time limit   \n"))
 
 
 class node:
@@ -53,21 +60,24 @@ def create_tree(root, depth):
     return root
 
 
-def get_move(state):
-    s = state.copy()
-    root = node(s, 'max')
-    create_tree(root, LEVELS[level])
-    alpha_beta(root, float('-inf'), float('inf'), 'max')
-    temp = []
-    for child in root.children:
-        if child.cost == root.cost:
-            temp.append(child)
-    if len(temp) > 1:
-        for i in temp:
-            if i.pruned == 0:
-                return i.move_made_me
-    else:
-        return temp[0].move_made_me
+def get_move(state, depth=LEVELS[level]):
+    try:
+        s = state.copy()
+        root = node(s, 'max')
+        create_tree(root, depth)
+        alpha_beta(root, float('-inf'), float('inf'), 'max')
+        temp = []
+        for child in root.children:
+            if child.cost == root.cost:
+                temp.append(child)
+        if len(temp) > 1:
+            for i in temp:
+                if i.pruned == 0:
+                    return i.move_made_me
+        else:
+            return temp[0].move_made_me
+    except KeyboardInterrupt:
+        return -1
 
 
 def cost_fun(state):
@@ -219,6 +229,42 @@ def alpha_beta(node, alpha, beta, max_min):
         return temp
 
 
+class TimeoutException(Exception):   # Custom exception class
+    pass
+
+
+def timeout_handler(signum, frame):   # Custom signal handler
+    raise TimeoutException
+
+
+def get_move_irp(current_state):
+
+    if interrupt_mode == 0:
+        return get_move(current_state)
+    
+    elif interrupt_mode == 1:
+        i = 2
+        move = get_move(current_state, 1)
+
+        while True:
+            temp = get_move(current_state, i)
+            if temp == -1:
+                return move
+            move = temp
+            i += 1
+    else:
+        i = 2
+        move = get_move(current_state, 1)
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(30)
+        try:
+            while True:
+                temp = get_move(current_state, i)
+                move = temp
+        except TimeoutException:
+            return move
+
+
 def print_state(state):
     s = state.copy()
     temp = s[7:13]
@@ -240,7 +286,7 @@ while True:
         user_move = int(
             input('it is your turn Enter a number from 1 to 6 or 0 to save and exit\n'))+6
         if user_move == 6:
-            save.save(current_state, stealing, level)
+            save.save(current_state, stealing, level, interrupt_mode)
             break
 
         valid_move, returned_state, next_turn = make_move(
@@ -249,7 +295,7 @@ while True:
             user_move = int(
                 input('this is not a valid move try again,  Enter a number from 1 to 6\n'))+6
             if user_move == 6:
-                save.save(current_state, stealing, level)
+                save.save(current_state, stealing, level, interrupt_mode)
                 break
             valid_move, returned_state, next_turn = make_move(
                 user_move, current_state)
@@ -260,7 +306,11 @@ while True:
         print("--------------------")
     else:
         print('this is my move')
-        suggested_move = get_move(current_state)
+
+        t1 = time.time()
+        suggested_move = get_move_irp(current_state)
+
+        print("time: ", time.time()-t1)
         valid_move, returned_state, next_turn = make_move(
             suggested_move, current_state)
         current_state = returned_state
