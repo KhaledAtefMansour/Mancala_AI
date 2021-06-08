@@ -1,11 +1,13 @@
 import save
 current_state = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]
+LEVELS = [1, 4, 7, 10]
 
 load = int(input("do you want to load game ? (yes = press 1, no = press 0)  \n"))
 stealing = 1
 turn = ""
+level = 1
 if load == 1:
-    current_state, stealing = save.load()
+    current_state, stealing, level = save.load()
     turn = 'min'
 
 else:
@@ -13,6 +15,8 @@ else:
         input("do you want stealing mode ? (yes = press 1, no = press 0)  \n"))
     turn = input(
         "do you want to start ? (yes = enter 'min', no = enter 'max')  \n")
+    level = int(
+        input("choose level: 1 - 2 - 3 - 4  \n"))-1
 
 
 class node:
@@ -52,7 +56,7 @@ def create_tree(root, depth):
 def get_move(state):
     s = state.copy()
     root = node(s, 'max')
-    create_tree(root, 4)
+    create_tree(root, LEVELS[level])
     alpha_beta(root, float('-inf'), float('inf'), 'max')
     temp = []
     for child in root.children:
@@ -236,7 +240,7 @@ while True:
         user_move = int(
             input('it is your turn Enter a number from 1 to 6 or 0 to save and exit\n'))+6
         if user_move == 6:
-            save.save(current_state, stealing)
+            save.save(current_state, stealing, level)
             break
 
         valid_move, returned_state, next_turn = make_move(
@@ -245,7 +249,7 @@ while True:
             user_move = int(
                 input('this is not a valid move try again,  Enter a number from 1 to 6\n'))+6
             if user_move == 6:
-                save.save(current_state, stealing)
+                save.save(current_state, stealing, level)
                 break
             valid_move, returned_state, next_turn = make_move(
                 user_move, current_state)
@@ -253,7 +257,7 @@ while True:
         turn = next_turn
         print('this is your play')
         print_state(current_state)
-        print("_________________________")
+        print("--------------------")
     else:
         print('this is my move')
         suggested_move = get_move(current_state)
@@ -262,4 +266,4 @@ while True:
         current_state = returned_state
         turn = next_turn
         print_state(current_state)
-        print("_________________________")
+        print("--------------------")

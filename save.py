@@ -10,7 +10,7 @@ data_path = 'data.csv'
 def load():
     state = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]
     if not os.path.exists(data_path):
-        return state, 1
+        return state, 1, 1
     with open(data_path, 'r') as data:
         reader = list(csv.reader(data))
         i = 0
@@ -19,14 +19,14 @@ def load():
             print(row[0], row[2])
 
         if i < 2:
-            return state, 1
+            return state, 1, 1
         game_num = int(input("enter game number to be loaded: "))
         for j, row in enumerate(reader):
             if j == game_num:
-                return [int(x) for x in row[1].split()], int(row[-1])
+                return [int(x) for x in row[1].split()], int(row[3]), int(row[4])
 
 
-def save(state, stealing):
+def save(state, stealing, level):
     with open(data_path, 'r+') as data:
         writer = csv.writer(data)
         reader = list(csv.reader(data))
@@ -40,7 +40,7 @@ def save(state, stealing):
         for i in state:
             s = s + str(i) + " "
         s = s.strip()
-        writer.writerow([ln, s, datetime.now(), stealing])
+        writer.writerow([ln, s, datetime.now(), stealing, level])
 
     return True
 
